@@ -114,10 +114,41 @@ THE SOFTWARE.
     H.wrap(H.Series.prototype, 'setData', function (proceed) {
         var opt = this.options;
         if (opt.hasOwnProperty('downsample')) {
-
+			
+			//cache our presampled data so we can improve our granularity on zoom
+			opt.downsample.preSampled = opt.downsample.preSampled ? opt.downsample.preSampled : arguments[1];
+			
+			console.time('Downsampling');
             if (Array.isArray(arguments[1][0]) && arguments[1][0].length == 2) {
                 // Data is array of arrays with two values
-                arguments[1] = largestTriangleThreeBuckets(arguments[1], opt.downsample.threshold);
+				
+				var min = opt.downsample.min;
+				var max = opt.downsample.max;
+				var data;
+				if(arguments[1].length > opt.downsample.threshold && (!(min === null || min === undefined) || !(max === null || max === undefined))){
+					data = [];
+					var addedMin, maxAdded;
+					for (var i = 0; i < arguments[1].length ; i++) {
+						if((min === null || min === undefined || arguments[1][i][0] >= min) && (max === null || max === undefined || arguments[1][i][0] <= max)){
+							//always add the one before the zoom starts
+							if(!addedMin && i > 0){
+								addedMin = true;
+								data.push(arguments[1][i-1]);
+							}
+							data.push(arguments[1][i]);
+							maxAdded = i;
+						}
+					}
+					//always add the one before the zoom ends
+					if((maxAdded+1) < arguments[1].length){
+						data.push(arguments[1][maxAdded+1]);
+					}
+					
+				}else{
+					data = arguments[1]
+				}
+                arguments[1] = largestTriangleThreeBuckets(data, opt.downsample.threshold);
+				console.log('After sample',arguments[1].length);
             } else if (!isNaN(parseFloat(arguments[1][0])) && isFinite(arguments[1][0])) {
                 // Data is array of numerical values.
                 var point_x = typeof opt.pointStart != 'undefined' ? opt.pointStart : 0; // First X
@@ -131,8 +162,26 @@ THE SOFTWARE.
             } else {
                 console.log("Downsample Error: Invalid data format! Note: Array of objects and Range Series are not supported");
             }
+			console.timeEnd('Downsampling');
         }
         proceed.apply(this, Array.prototype.slice.call(arguments, 1));
+    });
+	
+	H.wrap(H.Axis.prototype, 'setExtremes', function (proceed) {
+        var series = this.series;
+        var min = arguments[1];
+		var max = arguments[2];
+		for (var i = 0; i < series.length; i++) {
+			var serie = series[i];
+			//On zoom update our data sample
+			if(serie.options && serie.options.downsample && Array.isArray(serie.options.downsample.preSampled)){
+				serie.options.downsample.min = min;
+				serie.options.downsample.max = max;
+				serie.setData(serie.options.downsample.preSampled);
+			}
+		}
+		
+        proceed.apply(this,Array.prototype.slice.call(arguments, 1));
     });
 
 }));
