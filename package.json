@@ -1,9 +1,14 @@
 {
   "name": "highcarts-downsample",
-  "version": "1.0.1",
+  "version": "1.0.2",
+  "license":"MIT",
    "scripts": {
         
     },
     "dependencies": {
-    }
+    },
+	"repository": {
+  		"type": "git",
+  		"url": "git://github.com/mrawdon/highcharts-downsample.git"
+	}
 }
