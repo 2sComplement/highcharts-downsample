@@ -22,7 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-(function (H) {
+(function (factory) {
+	if (typeof module === 'object' && module.exports) {
+		module.exports = factory;
+	} else {
+		factory(Highcharts);
+	}
+}(function (H) {
     "use strict";
 
     if(!Array.isArray) {
@@ -129,4 +135,4 @@ THE SOFTWARE.
         proceed.apply(this, Array.prototype.slice.call(arguments, 1));
     });
 
-}(Highcharts));
+}));
