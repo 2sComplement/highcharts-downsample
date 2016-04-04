@@ -40,6 +40,87 @@ THE SOFTWARE.
     var floor = Math.floor,
         abs = Math.abs;
 
+	function getX(dataPoint){
+		if(dataPoint === undefined){
+			return;
+		}
+		if(Array.isArray(dataPoint) && dataPoint.length >= 2){
+			return dataPoint[0];
+		}else if(dataPoint.x){
+			return dataPoint.x;
+		}else if(dataPoint.name){
+			return dataPoint.name;
+		}
+	}
+	function getY(dataPoint){
+		if(dataPoint === undefined){
+			return;
+		}
+		if(Array.isArray(dataPoint) && dataPoint.length >= 2){
+			return dataPoint[1];
+		}else if(dataPoint.y !== undefined){
+			return dataPoint.y;
+		}else if(dataPoint.value !== undefined){
+			return dataPoint.value;
+		}
+	}
+
+	function mergeY(dataPoint, mergePoint){
+		if(dataPoint === undefined){
+			return;
+		}
+		if(Array.isArray(dataPoint) && dataPoint.length >= 2){
+			dataPoint[1] += mergePoint[1];
+		}else if(dataPoint.y !== undefined){
+			 dataPoint.y += mergePoint.y;
+		}else if(dataPoint.value !== undefined){
+			dataPoint.value += mergePoint.value;
+		}
+	}
+
+	function setX(dataPoint, x){
+		if(dataPoint === undefined){
+			return;
+		}
+		if(Array.isArray(dataPoint) && dataPoint.length >= 2){
+			dataPoint[0] = x;
+		}else if(dataPoint.x !== undefined){
+			 dataPoint.x = x;
+		}else if(dataPoint.value !== undefined){
+			dataPoint.value = x;
+		}
+	}
+
+	function setY(dataPoint, y){
+		if(dataPoint === undefined){
+			return;
+		}
+		if(Array.isArray(dataPoint) && dataPoint.length >= 2){
+			dataPoint[1] = y;
+		}else if(dataPoint.y !== undefined){
+			 dataPoint.y += y;
+		}else if(dataPoint.value !== undefined){
+			dataPoint.value += y;
+		}
+	}
+	
+	function clone(dataPoint){
+		if(dataPoint === undefined){
+			return;
+		}
+		if(Array.isArray(dataPoint) && dataPoint.length >= 2){
+			return [dataPoint[0],dataPoint[1]]
+		}else if(dataPoint.y !== undefined){
+			var obj = {};	
+			for(var key in dataPoint){
+				obj[key] = dataPoint[key];
+			}
+			return obj;
+		}
+	}
+	
+	
+	
     function largestTriangleThreeBuckets(data, threshold) {
 
         var data_length = data.length;
@@ -73,8 +154,8 @@ THE SOFTWARE.
             var avg_range_length = avg_range_end - avg_range_start;
 
             for ( ; avg_range_start<avg_range_end; avg_range_start++ ) {
-              avg_x += data[ avg_range_start ][ 0 ] * 1; // * 1 enforces Number (value may be Date)
-              avg_y += data[ avg_range_start ][ 1 ] * 1;
+              avg_x += getX(data[ avg_range_start ]) * 1; // * 1 enforces Number (value may be Date)
+              avg_y += getY(data[ avg_range_start ]) * 1;
             }
             avg_x /= avg_range_length;
             avg_y /= avg_range_length;
@@ -84,8 +165,8 @@ THE SOFTWARE.
                 range_to   = floor( (i + 1) * every ) + 1;
 
             // Point a
-            var point_a_x = data[ a ][ 0 ] * 1, // Enforce Number (value may be Date)
-                point_a_y = data[ a ][ 1 ] * 1;
+            var point_a_x = getX(data[ a ]) * 1, // Enforce Number (value may be Date)
+                point_a_y = getY([ a ]) * 1;
 
             max_area = area = -1;
 
@@ -100,8 +181,10 @@ THE SOFTWARE.
                     next_a = range_offs; // Next a is this b
                 }
             }
-
-            sampled[ sampled_index++ ] = max_area_point; // Pick this point from the bucket
+			var clonedPoint = clone(data[a]);
+			setX(clonedPoint,getX(max_area_point));
+			setY(clonedPoint,getY(max_area_point));
+            sampled[ sampled_index++ ] = clonedPoint; // Pick this point from the bucket
             a = next_a; // This a is the next a (chosen b)
         }
 
