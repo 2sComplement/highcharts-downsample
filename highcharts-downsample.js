@@ -166,14 +166,14 @@ THE SOFTWARE.
 
             // Point a
             var point_a_x = getX(data[ a ]) * 1, // Enforce Number (value may be Date)
-                point_a_y = getY([ a ]) * 1;
+                point_a_y = getY(data[ a ]) * 1;
 
             max_area = area = -1;
 
             for ( ; range_offs < range_to; range_offs++ ) {
                 // Calculate triangle area over three buckets
-                area = abs( ( point_a_x - avg_x ) * ( data[ range_offs ][ 1 ] - point_a_y ) -
-                            ( point_a_x - data[ range_offs ][ 0 ] ) * ( avg_y - point_a_y )
+                area = abs( ( point_a_x - avg_x ) * ( getY(data[ range_offs ]) - point_a_y ) -
+                            ( point_a_x - getX(data[ range_offs ])) * ( avg_y - point_a_y )
                           ) * 0.5;
                 if ( area > max_area ) {
                     max_area = area;
@@ -202,7 +202,18 @@ THE SOFTWARE.
 			opt.downsample.preSampled = opt.downsample.preSampled ? opt.downsample.preSampled : arguments[1];
 			
 			console.time('Downsampling');
-            if (Array.isArray(arguments[1][0]) && arguments[1][0].length == 2) {
+			 if (!isNaN(parseFloat(arguments[1][0])) && isFinite(arguments[1][0])) {
+                // Data is array of numerical values.
+                var point_x = typeof opt.pointStart != 'undefined' ? opt.pointStart : 0; // First X
+                var pointInterval = typeof opt.pointInterval != 'undefined' ? opt.pointInterval : 1;
+                // Turn it into array of arrays with two values.
+                for (var i = 0, len = arguments[1].length; i < len; i++) {
+                    arguments[1][i] = [point_x, arguments[1][i]];
+                    point_x += pointInterval;
+                }
+                arguments[1] = largestTriangleThreeBuckets(arguments[1], opt.downsample.threshold);
+            }
+            else {
                 // Data is array of arrays with two values
 				
 				var min = opt.downsample.min;
@@ -212,7 +223,8 @@ THE SOFTWARE.
 					data = [];
 					var addedMin, maxAdded;
 					for (var i = 0; i < arguments[1].length ; i++) {
-						if((min === null || min === undefined || arguments[1][i][0] >= min) && (max === null || max === undefined || arguments[1][i][0] <= max)){
+						var x=getX(arguments[1][i]);
+						if((min === null || min === undefined || x >= min) && (max === null || max === undefined || x <= max)){
 							//always add the one before the zoom starts
 							if(!addedMin && i > 0){
 								addedMin = true;
@@ -232,18 +244,6 @@ THE SOFTWARE.
 				}
                 arguments[1] = largestTriangleThreeBuckets(data, opt.downsample.threshold);
 				console.log('After sample',arguments[1].length);
-            } else if (!isNaN(parseFloat(arguments[1][0])) && isFinite(arguments[1][0])) {
-                // Data is array of numerical values.
-                var point_x = typeof opt.pointStart != 'undefined' ? opt.pointStart : 0; // First X
-                var pointInterval = typeof opt.pointInterval != 'undefined' ? opt.pointInterval : 1;
-                // Turn it into array of arrays with two values.
-                for (var i = 0, len = arguments[1].length; i < len; i++) {
-                    arguments[1][i] = [point_x, arguments[1][i]];
-                    point_x += pointInterval;
-                }
-                arguments[1] = largestTriangleThreeBuckets(arguments[1], opt.downsample.threshold);
-            } else {
-                console.log("Downsample Error: Invalid data format! Note: Array of objects and Range Series are not supported");
             }
 			console.timeEnd('Downsampling');
         }
