@@ -9,7 +9,8 @@ $(function() {
             type: 'line',
             backgroundColor:'rgba(255, 255, 255, 0.0)',
             plotBorderColor: '#545454',
-            plotBorderWidth: 2
+            plotBorderWidth: 2,
+			zoomType: 'x',
         },
         title:{
             text: ''
